@@ -4,13 +4,24 @@
 
 package shield;
 
+import java.io.IOException;
+
 public class CateringCompanyClientImp implements CateringCompanyClient {
+  private String endpoint;
   public CateringCompanyClientImp(String endpoint) {
+    this.endpoint = endpoint;
   }
 
   @Override
   public boolean registerCateringCompany(String name, String postCode) {
-    return false;
+    String request = "/registerCateringCompany?business_name="+name+"&postcode=" + postCode;
+    try {
+      ClientIO.doGETRequest(endpoint+request);
+      return true;
+    } catch (IOException e) {
+      e.printStackTrace();
+      return false;
+    }
   }
 
   @Override
