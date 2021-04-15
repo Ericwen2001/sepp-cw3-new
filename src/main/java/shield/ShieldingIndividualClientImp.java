@@ -1,7 +1,3 @@
-/**
- * To implement
- */
-
 package shield;
 
 import com.google.gson.Gson;
@@ -49,7 +45,7 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
   private Individual individual;
   private String chi;
   private FoodBox currentFoodBox;
-  private final List<Order> orders = new ArrayList<>();
+  private final HashMap<String,Order> orders = new HashMap<>();
   //initialize in showFoodBox()
   private  List<FoodBox> availableFoodBoxFromServer;
   private List<Caterer> availableCatererFromServer;
@@ -88,14 +84,12 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
     int quantity;
   }
   private static class Order {
-    public Order(String orderNumber, FoodBox foodBox, int orderStatue, long placedTime) {
-      this.orderNumber = orderNumber;
+    public Order(FoodBox foodBox, int orderStatue, long placedTime) {
       this.foodBox = foodBox;
       this.orderStatue = orderStatue;
       this.placedTime = placedTime;
     }
 
-    String orderNumber;
     FoodBox foodBox;
     int orderStatue;
     long placedTime;
@@ -252,7 +246,7 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
     //check last order date!
     ArrayList<Long> historicalOrderTime = new ArrayList<>();
     historicalOrderTime.add(0L);
-    for (Order o : orders) {
+    for (Order o : orders.values()) {
       if (o.orderStatue != 4) {//not cancelled orders
         historicalOrderTime.add(o.placedTime);
       }
@@ -281,7 +275,7 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
       e.printStackTrace();
       return false;
     }
-    orders.add(new Order(orderNumber, currentFoodBox, 0, System.currentTimeMillis()));
+    orders.put(orderNumber,new Order(currentFoodBox, 0, System.currentTimeMillis()));
     foodBoxHashMap.put(orderNumber,currentFoodBox);
     currentFoodBox = null;
     return true;
@@ -327,16 +321,14 @@ private String closestCateringPostCode(String closestCompany) {
     } catch (IOException e) {
       e.printStackTrace();
     }
-    for (Order o : orders){
-      if (Integer.parseInt(o.orderNumber)==orderNumber) {
-        if (result.equals("True")) {
-          o.foodBox = foodBoxHashMap.get(String.valueOf(orderNumber));
-          return true;
-        } else {
-          foodBoxHashMap.put(String.valueOf(orderNumber),o.foodBox);
-          return false;
-        }
-      }
+    String orderID = String.valueOf(orderNumber);
+    Order o = orders.get(orderID);
+    if (result.equals("True")) {//update the contents in orders
+      o.foodBox = foodBoxHashMap.get(orderID);
+      orders.put(orderID,o);
+      return true;
+    } else {//reset the contents in foodBoxHashMap
+      foodBoxHashMap.put(orderID,o.foodBox);
     }
 
     return false;
@@ -353,12 +345,7 @@ private String closestCateringPostCode(String closestCompany) {
    * @return true if "orders" contain this order
    */
   private boolean doNotHasThisOrder(int orderNumber) {
-    for (Order o : orders) {
-      if (Integer.parseInt(o.orderNumber) == orderNumber) {
-        return false;
-      }
-    }
-    return true;
+    return !orders.containsKey(String.valueOf(orderNumber));
   }
 
   /**
@@ -383,12 +370,9 @@ private String closestCateringPostCode(String closestCompany) {
     try {
       String response = ClientIO.doGETRequest(endpoint+request);
       int status = Integer.parseInt(response);
-      for (Order o : orders) {
-        if (Integer.parseInt(o.orderNumber) == orderNumber) {
-          o.orderStatue = status;
-          return true;
-        }
-      }
+      Order o = orders.get(String.valueOf(orderNumber));
+      o.orderStatue = status;
+      orders.put(String.valueOf(orderNumber),o);
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -698,8 +682,8 @@ private String closestCateringPostCode(String closestCompany) {
   @Override
   public Collection<Integer> getOrderNumbers() {
     Collection<Integer> orderNumbers = new ArrayList<>();
-    for (Order o : orders) {
-      orderNumbers.add(Integer.parseInt(o.orderNumber));
+    for (String s : orders.keySet()) {
+      orderNumbers.add(Integer.parseInt(s));
     }
     return orderNumbers;
   }
@@ -714,12 +698,8 @@ private String closestCateringPostCode(String closestCompany) {
    */
   @Override
   public String getStatusForOrder(int orderNumber) {
-    int orderStatus = -1;
-    for (Order o : orders){
-      if (Integer.parseInt(o.orderNumber) == orderNumber){
-        orderStatus = o.orderStatue;
-      }
-    }
+    int orderStatus = orders.get(String.valueOf(orderNumber)).orderStatue;
+
     if (orderStatus == -1) {
       try {
         throw new IllegalArgumentException("invalid orderNumber: "+orderNumber);
@@ -753,15 +733,11 @@ private String closestCateringPostCode(String closestCompany) {
       }
     }
     ArrayList<Integer> ItemIds = new ArrayList<>();
-    for (Order o : orders) {
-      if (Integer.parseInt(o.orderNumber) == orderNumber) {
-        for (Content c : o.foodBox.contents){
-          ItemIds.add(c.id);
-        }
-        return ItemIds;
-      }
+    Order o = orders.get(String.valueOf(orderNumber));
+    for (Content c : o.foodBox.contents) {
+      ItemIds.add(c.id);
     }
-    return null;
+    return ItemIds;
   }
 
   /**
@@ -780,21 +756,10 @@ private String closestCateringPostCode(String closestCompany) {
         return null;
       }
     }
-
-    for (Order o : orders) {
-      if (Integer.parseInt(o.orderNumber) == orderNumber) {
-        for (Content c : o.foodBox.contents){
-          if (c.id == itemId) {
-            return c.name;
-          }
-        }
-        //return null if no such item
-        try {
-          throw new Exception("No such itemId: " + itemId + "in the order.");
-        } catch (Exception e) {
-          e.printStackTrace();
-          return null;
-        }
+    Order o = orders.get(String.valueOf(orderNumber));
+    for (Content c : o.foodBox.contents) {
+      if (c.id == itemId) {
+        return c.name;
       }
     }
     return null;
@@ -811,21 +776,10 @@ private String closestCateringPostCode(String closestCompany) {
         return 0;
       }
     }
-
-    for (Order o : orders) {
-      if (Integer.parseInt(o.orderNumber) == orderNumber) {
-        for (Content c : o.foodBox.contents){
-          if (c.id == itemId) {
-            return c.quantity;
-          }
-        }
-        //return null if no such item
-        try {
-          throw new Exception("No such itemId: " + itemId + "in the order.");
-        } catch (Exception e) {
-          e.printStackTrace();
-          return 0;
-        }
+    Order o = orders.get(String.valueOf(orderNumber));
+    for (Content c : o.foodBox.contents) {
+      if (c.id == itemId) {
+        return c.quantity;
       }
     }
     return 0;
@@ -843,6 +797,8 @@ private String closestCateringPostCode(String closestCompany) {
   public boolean setItemQuantityForOrder(int itemId, int orderNumber, int quantity) {
     if (doNotHasThisOrder(orderNumber)) {
       try {
+
+        System.out.println(orderNumber);
         throw new Exception("No this order!");
       } catch (Exception e) {
         e.printStackTrace();
