@@ -1,7 +1,3 @@
-/**
- *
- */
-
 package shield;
 
 import org.junit.jupiter.api.*;
@@ -92,7 +88,28 @@ public class ShieldingIndividualClientImpTest {
    assertEquals(client.getStatusForOrder(id),"Placed");
    assertTrue(client.setItemQuantityForOrder(1,id,1));
    assertTrue(client.editOrder(id));
-//   assertTrue(client.setItemQuantityForOrder(1,id,0));
-//   assertTrue(client.editOrder(id));
+   assertTrue(client.setItemQuantityForOrder(1,id,0));
+   assertTrue(client.editOrder(id));
+   assertFalse(client.setItemQuantityForOrder(1,id,1));
  }
+
+    @Test
+    public void testCancelOrder() {
+        Random rand = new Random();
+        int random = rand.nextInt(100000);
+        String chi = String.valueOf(1210000000+random);
+        assertTrue(client.registerShieldingIndividual(chi));
+        assertTrue(client.isRegistered());
+        assertEquals(client.getCHI(), chi);
+        client.showFoodBoxes("pollotarian");
+        assertTrue(client.pickFoodBox(2));
+        assertTrue(client.changeItemQuantityForPickedFoodBox(1,1));
+        client.getCateringCompanies();
+        assertTrue(client.placeOrder());
+        int id = client.getOrderNumbers().iterator().next();
+        assertEquals(client.getStatusForOrder(id),"Placed");
+        assertTrue(client.cancelOrder(id));
+        assertTrue(client.requestOrderStatus(id));
+        assertEquals(client.getStatusForOrder(id),"Cancelled");
+    }
 }

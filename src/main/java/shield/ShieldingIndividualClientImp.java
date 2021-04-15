@@ -336,7 +336,22 @@ private String closestCateringPostCode(String closestCompany) {
 
   @Override
   public boolean cancelOrder(int orderNumber) {
-    return false;
+    if (doNotHasThisOrder(orderNumber)) {
+      try {
+        throw new Exception("No permission to cancel this order!");
+      } catch (Exception e) {
+        e.printStackTrace();
+        return false;
+      }
+    }
+    String request = "/cancelOrder?order_id=" + orderNumber;
+    try {
+      String result = ClientIO.doGETRequest(endpoint+request);
+      return result.equals("True");
+    } catch (IOException e) {
+      e.printStackTrace();
+      return false;
+    }
   }
 
   /**
@@ -373,6 +388,7 @@ private String closestCateringPostCode(String closestCompany) {
       Order o = orders.get(String.valueOf(orderNumber));
       o.orderStatue = status;
       orders.put(String.valueOf(orderNumber),o);
+      return true;
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -713,6 +729,7 @@ private String closestCateringPostCode(String closestCompany) {
       case 1 -> "Packed";
       case 2 -> "Dispatched";
       case 3 -> "Delivered";
+      case 4 -> "Cancelled";
       default -> "unknown status!";
     };
   }
