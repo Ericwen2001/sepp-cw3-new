@@ -33,7 +33,7 @@ public class SupermarketClientImp implements SupermarketClient {
   // **UPDATE2** ADDED METHOD
   @Override
   public boolean recordSupermarketOrder(String CHI, int orderNumber) {
-    String request = "recordSupermarketOrder?individual_id=" + CHI + "&order_number=" + orderNumber + "&supermarket_business_name=" + name + "&supermarket_postcode=" + postCode;
+    String request = "/recordSupermarketOrder?individual_id=" + CHI + "&order_number=" + orderNumber + "&supermarket_business_name=" + name + "&supermarket_postcode=" + postCode;
     try {
       String respond = ClientIO.doGETRequest(endpoint+request);
       if(respond.equals("True")){
@@ -79,5 +79,15 @@ public class SupermarketClientImp implements SupermarketClient {
   @Override
   public String getPostCode() {
     return postCode;
+  }
+
+  @Override
+  public void setName(String name){
+    this.name = name;
+  }
+
+  @Override
+  public void setPostCode(String postCode){
+    this.postCode = postCode;
   }
 }

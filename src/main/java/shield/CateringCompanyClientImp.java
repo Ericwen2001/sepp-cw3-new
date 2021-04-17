@@ -32,9 +32,10 @@ public class CateringCompanyClientImp implements CateringCompanyClient {
 
   @Override
   public boolean updateOrderStatus(int orderNumber, String status) {
-    String request = "/updateOrderStatus?order_id=" + orderNumber + "&newStatus=" + status;
+    String request = "/updateOrderStatus?order_id=" + String.valueOf(orderNumber) + "&newStatus=" + status;
     try {
       String respond = ClientIO.doGETRequest(endpoint+request);
+      //System.out.println(respond);
       if(respond.equals("True")){
         return true;
       }
