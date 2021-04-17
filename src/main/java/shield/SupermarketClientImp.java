@@ -12,6 +12,7 @@ public class SupermarketClientImp implements SupermarketClient {
   private String postCode;
   private boolean isRegistered;
   public SupermarketClientImp(String endpoint) {
+    this.endpoint = endpoint;
   }
 
   @Override

@@ -11,8 +11,7 @@ public class CateringCompanyClientImp implements CateringCompanyClient {
   private String name;
   private String postCode;
   private boolean isRegistered;
-  public CateringCompanyClientImp(String endpoint, String name, String postCode) {
-    registerCateringCompany(name,postCode);
+  public CateringCompanyClientImp(String endpoint) {
     this.endpoint = endpoint;
   }
 
