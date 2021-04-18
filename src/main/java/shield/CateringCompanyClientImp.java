@@ -5,6 +5,7 @@
 package shield;
 
 import java.io.IOException;
+import java.util.Objects;
 
 public class CateringCompanyClientImp implements CateringCompanyClient {
   private String endpoint;
@@ -15,8 +16,16 @@ public class CateringCompanyClientImp implements CateringCompanyClient {
     this.endpoint = endpoint;
   }
 
+  /**
+   * Register the business to the server. At the same time initialize the object.
+   * @param name name of the business
+   * @param postCode post code of the business
+   * @return true if the business is successfully registered.
+   */
   @Override
   public boolean registerCateringCompany(String name, String postCode) {
+    Objects.requireNonNull(name);
+    Objects.requireNonNull(postCode);
     String request = "/registerCateringCompany?business_name=" + name + "&postcode=" + postCode;
     try {
       ClientIO.doGETRequest(endpoint+request);
@@ -30,11 +39,20 @@ public class CateringCompanyClientImp implements CateringCompanyClient {
     }
   }
 
+  /**
+   * Update the target order to the target status. Status can only be one of "packed/dispatched/delivered".
+   * @param orderNumber the order number
+   * @param status status of the order for the requested number
+   * @return true if the status of the order is successfully updated.
+   */
   @Override
   public boolean updateOrderStatus(int orderNumber, String status) {
-    String request = "/updateOrderStatus?order_id=" + orderNumber + "&newStatus=" + status;
+    Objects.requireNonNull(orderNumber);
+    Objects.requireNonNull(status);
+    String request = "/updateOrderStatus?order_id=" + String.valueOf(orderNumber) + "&newStatus=" + status;
     try {
       String respond = ClientIO.doGETRequest(endpoint+request);
+      //System.out.println(respond);
       if(respond.equals("True")){
         return true;
       }
@@ -47,6 +65,9 @@ public class CateringCompanyClientImp implements CateringCompanyClient {
     }
   }
 
+  /**
+   * @return whether the business using this client is registered.
+   */
   @Override
   public boolean isRegistered() {
     return isRegistered;
