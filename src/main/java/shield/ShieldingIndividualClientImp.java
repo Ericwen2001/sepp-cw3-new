@@ -18,7 +18,15 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
         orders = o;
     }
 
-    private final HashMap<String, FoodBox> foodBoxHashMap = new HashMap<>();
+    public HashMap<String, FoodBox> getEditedFoodBoxHashmap() {
+        return editedFoodBoxHashmap;
+    }
+
+    public void setEditedFoodBoxHashmap(HashMap<String, FoodBox> editedFoodBoxHashmap) {
+        this.editedFoodBoxHashmap = editedFoodBoxHashmap;
+    }
+
+    private  HashMap<String, FoodBox> editedFoodBoxHashmap = new HashMap<>();
 
     private Individual individual;
     public Individual getIndividual() {
@@ -215,7 +223,7 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
      * Use currentFoodBox.contents to place order,
      * if success, set currentFoodBox to null,
      * store order details including time, order number,
-     * statue, contents.
+     * status, contents.
      * Can't place an order if last order was placed within
      * seven days.
      *
@@ -228,7 +236,7 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
         ArrayList<Long> historicalOrderTime = new ArrayList<>();
         historicalOrderTime.add(0L);
         for (Order o : orders.values()) {
-            if (o.orderStatue != 4) {//not cancelled orders
+            if (o.orderStatus != 4) {//not cancelled orders
                 historicalOrderTime.add(o.placedTime);
             }
         }
@@ -257,7 +265,7 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
             return false;
         }
         orders.put(orderNumber, new Order(currentFoodBox, 0, System.currentTimeMillis()));
-        foodBoxHashMap.put(orderNumber, currentFoodBox);
+        editedFoodBoxHashmap.put(orderNumber, currentFoodBox);
         currentFoodBox = null;
         return true;
     }
@@ -296,7 +304,7 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
             }
         }
         String request = "/editOrder?order_id=" + orderNumber;
-        List<Content> rawData = foodBoxHashMap.get(String.valueOf(orderNumber)).contents;
+        List<Content> rawData = editedFoodBoxHashmap.get(String.valueOf(orderNumber)).contents;
         String data = "{\"contents\": " + new Gson().toJson(rawData) + "}";
         String result = "False";
         try {
@@ -307,11 +315,11 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
         String orderID = String.valueOf(orderNumber);
         Order o = orders.get(orderID);
         if (result.equals("True")) {//update the contents in orders
-            o.foodBox = foodBoxHashMap.get(orderID);
+            o.foodBox = editedFoodBoxHashmap.get(orderID);
             orders.put(orderID, o);
             return true;
         } else {//reset the contents in foodBoxHashMap
-            foodBoxHashMap.put(orderID, o.foodBox);
+            editedFoodBoxHashmap.put(orderID, o.foodBox);
         }
 
         return false;
@@ -338,7 +346,8 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
     }
 
     /**
-     * A helper function of requestOrderStatus()
+     * A helper function check wheth
+     * orders contain given orderNumber
      *
      * @param orderNumber order number
      * @return true if "orders" contain this order
@@ -371,7 +380,7 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
             String response = ClientIO.doGETRequest(endpoint + request);
             int status = Integer.parseInt(response);
             Order o = orders.get(String.valueOf(orderNumber));
-            o.orderStatue = status;
+            o.orderStatus = status;
             orders.put(String.valueOf(orderNumber), o);
             return true;
         } catch (IOException e) {
@@ -695,7 +704,7 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
     }
 
     /**
-     * return null if no orders yet
+     * return empty collection if no orders yet
      *
      * @return all order numbers from "orders"
      */
@@ -719,7 +728,16 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
      */
     @Override
     public String getStatusForOrder(int orderNumber) {
-        int orderStatus = orders.get(String.valueOf(orderNumber)).orderStatue;
+        if (doNotHasThisOrder(orderNumber)) {
+            try {
+                throw new IllegalArgumentException("Don't has this order");
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+                return null;
+            }
+
+        }
+        int orderStatus = orders.get(String.valueOf(orderNumber)).orderStatus;
 
         if (orderStatus == -1) {
             try {
@@ -810,7 +828,12 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
 
     /**
      * set item Quantity for an order belong to this user.
+     * set the content quantity in editedFoodBoxHashmap
+     * if quantity <= the quantity of this item in the server then
+     * change quantity in editedFoodBoxHashmap and return true
      * do this before editOrder()
+     * if editOrder() return true, alter orders using editedFoodBoxHashmap
+     * if editOrder() return false, alter editedFoodBoxHashmap using orders
      *
      * @param itemId      the food box id as last returned from the server
      * @param orderNumber the order number
@@ -830,12 +853,13 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
             }
         }
         //change the item quantity for that order in foodBoxHashMap
-        FoodBox foodBox = foodBoxHashMap.get(String.valueOf(orderNumber));
+        FoodBox foodBox = editedFoodBoxHashmap.get(String.valueOf(orderNumber));
+        int currentQuantityInServer = getItemQuantityForOrder(itemId,orderNumber);
         for (Content c : foodBox.contents) {
             if (c.id == itemId) {
-                if (quantity <= c.quantity) {
+                if (quantity <= currentQuantityInServer) {
                     c.quantity = quantity;
-                    foodBoxHashMap.put(String.valueOf(orderNumber), foodBox);
+                    editedFoodBoxHashmap.put(String.valueOf(orderNumber), foodBox);
                     return true;
                 }
             }
@@ -957,6 +981,11 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
 
         private int id;
         private String name;
+
+        public void setQuantity(int quantity) {
+            this.quantity = quantity;
+        }
+
         private int quantity;
 
         public int getId() {
@@ -974,12 +1003,12 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
 
     static class Order {
         FoodBox foodBox;
-        int orderStatue;
+        int orderStatus;
         long placedTime;
 
-        public Order(FoodBox foodBox, int orderStatue, long placedTime) {
+        public Order(FoodBox foodBox, int orderStatus, long placedTime) {
             this.foodBox = foodBox;
-            this.orderStatue = orderStatue;
+            this.orderStatus = orderStatus;
             this.placedTime = placedTime;
         }
     }
