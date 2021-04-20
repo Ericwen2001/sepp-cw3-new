@@ -42,7 +42,10 @@ public class ShieldingIndividualClientImpTest {
     client = new ShieldingIndividualClientImp(clientProps.getProperty("endpoint"));
   }
 
-
+    /**
+     * Including use case:
+     * Register Shielding Individual
+     */
   @Test
   public void testShieldingIndividualNewRegistration() {
     Random rand = new Random();
@@ -52,6 +55,11 @@ public class ShieldingIndividualClientImpTest {
     assertTrue(client.isRegistered());
     assertEquals(client.getCHI(), chi);
   }
+    /**
+     * Including use cases:
+     * Register Shielding Individual
+     * Place Order
+     */
  @Test
  public void testPlaceOrder() {
    Random rand = new Random();
@@ -70,7 +78,12 @@ public class ShieldingIndividualClientImpTest {
    assertTrue(client.requestOrderStatus(id));
    assertEquals(client.getStatusForOrder(id),"Placed");
  }
-
+    /**
+     * Including use cases:
+     * Register Shielding Individual
+     * Place Order
+     * Edit Food Box Order
+     */
  @Test
   public void testEditOrder() {
    Random rand = new Random();
@@ -93,6 +106,13 @@ public class ShieldingIndividualClientImpTest {
    assertFalse(client.setItemQuantityForOrder(1,id,1));
  }
 
+    /**
+     * Including use cases:
+     * Register Shielding Individual
+     * Place Order
+     * Cancel Order
+     * Request status
+     */
     @Test
     public void testCancelOrder() {
         Random rand = new Random();
