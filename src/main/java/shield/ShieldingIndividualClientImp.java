@@ -11,9 +11,22 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
     private final String endpoint;
 
     private HashMap<String, Order> orders = new HashMap<>();
+    private HashMap<String, FoodBox> editedFoodBoxHashmap = new HashMap<>();
+    private Individual individual;
+    private String chi;
+    private FoodBox currentFoodBox;
+    //initialize in showFoodBox()
+    private List<FoodBox> availableFoodBoxFromServer;
+    private List<Caterer> availableCatererFromServer;
+
+    public ShieldingIndividualClientImp(String endpoint) {
+        this.endpoint = endpoint;
+    }
+
     public HashMap<String, Order> getOrders() {
         return orders;
     }
+
     public void setOrders(HashMap<String, Order> o) {
         orders = o;
     }
@@ -26,30 +39,20 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
         this.editedFoodBoxHashmap = editedFoodBoxHashmap;
     }
 
-    private  HashMap<String, FoodBox> editedFoodBoxHashmap = new HashMap<>();
-
-    private Individual individual;
     public Individual getIndividual() {
         return individual;
     }
+
     public void setIndividual(Individual individual) {
         this.individual = individual;
     }
 
-
-
-    private String chi;
     public String getChi() {
         return chi;
     }
 
     public void setChi(String chi) {
         this.chi = chi;
-    }
-
-    private FoodBox currentFoodBox;
-    public void setCurrentFoodBox(FoodBox currentFoodBox) {
-        this.currentFoodBox = currentFoodBox;
     }
 
     public List<FoodBox> getAvailableFoodBoxFromServer() {
@@ -60,9 +63,6 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
         this.availableFoodBoxFromServer = availableFoodBoxFromServer;
     }
 
-    //initialize in showFoodBox()
-    private List<FoodBox> availableFoodBoxFromServer;
-
     public List<Caterer> getAvailableCatererFromServer() {
         return availableCatererFromServer;
     }
@@ -71,14 +71,12 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
         this.availableCatererFromServer = availableCatererFromServer;
     }
 
-    private List<Caterer> availableCatererFromServer;
-
-    public ShieldingIndividualClientImp(String endpoint) {
-        this.endpoint = endpoint;
-    }
-
     public FoodBox getCurrentFoodBox() {
         return currentFoodBox;
+    }
+
+    public void setCurrentFoodBox(FoodBox currentFoodBox) {
+        this.currentFoodBox = currentFoodBox;
     }
 
     /**
@@ -845,7 +843,6 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
         if (doNotHasThisOrder(orderNumber)) {
             try {
 
-                System.out.println(orderNumber);
                 throw new Exception("No this order!");
             } catch (Exception e) {
                 e.printStackTrace();
@@ -854,7 +851,7 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
         }
         //change the item quantity for that order in foodBoxHashMap
         FoodBox foodBox = editedFoodBoxHashmap.get(String.valueOf(orderNumber));
-        int currentQuantityInServer = getItemQuantityForOrder(itemId,orderNumber);
+        int currentQuantityInServer = getItemQuantityForOrder(itemId, orderNumber);
         for (Content c : foodBox.contents) {
             if (c.id == itemId) {
                 if (quantity <= currentQuantityInServer) {
@@ -906,14 +903,8 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
     static class Individual {
         private final String name;
         private final String surName;
-
-        public void setPostCode(String postCode) {
-            this.postCode = postCode;
-        }
-
-        private String postCode;
         private final String phoneNumber;
-
+        private String postCode;
         public Individual(String name, String surName, String postCode, String phoneNumber) {
             this.name = name;
             this.surName = surName;
@@ -933,6 +924,10 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
             return postCode;
         }
 
+        public void setPostCode(String postCode) {
+            this.postCode = postCode;
+        }
+
         public String getPhoneNumber() {
             return phoneNumber;
         }
@@ -940,6 +935,12 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
 
     static class FoodBox {
 
+        // a field marked as transient is skipped in marshalling/unmarshalling
+        private final List<Content> contents;
+        private final String delivered_by;
+        private final String diet;
+        private final String id;
+        private final String name;
         public FoodBox(List<Content> contents, String delivered_by, String diet, String id, String name) {
             this.contents = contents;
             this.delivered_by = delivered_by;
@@ -947,15 +948,6 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
             this.id = id;
             this.name = name;
         }
-
-        // a field marked as transient is skipped in marshalling/unmarshalling
-        private List<Content> contents;
-
-
-        private String delivered_by;
-        private String diet;
-        private String id;
-        private String name;
 
         public List<Content> getContents() {
             return contents;
@@ -973,20 +965,15 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
     }
 
     static class Content {
+        private final int id;
+        private final String name;
+        private int quantity;
+
         public Content(int id, String name, int quantity) {
             this.id = id;
             this.name = name;
             this.quantity = quantity;
         }
-
-        private int id;
-        private String name;
-
-        public void setQuantity(int quantity) {
-            this.quantity = quantity;
-        }
-
-        private int quantity;
 
         public int getId() {
             return id;
@@ -998,6 +985,10 @@ public class ShieldingIndividualClientImp implements ShieldingIndividualClient {
 
         public int getQuantity() {
             return quantity;
+        }
+
+        public void setQuantity(int quantity) {
+            this.quantity = quantity;
         }
     }
 

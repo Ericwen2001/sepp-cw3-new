@@ -1,10 +1,13 @@
 package shield;
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import java.util.*;
-import java.time.LocalDateTime;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Properties;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -77,16 +80,16 @@ public class ShieldingIndividualClientImpTest {
         assertEquals(client.getStatusForOrder(id), "Placed");
 
         //check contents of the order
-        assertEquals(client.getItemIdsForOrder(id), Arrays.asList(1,2,6));
+        assertEquals(client.getItemIdsForOrder(id), Arrays.asList(1, 2, 6));
 
-        assertEquals(client.getItemNameForOrder(1,id),"cucumbers");
-        assertEquals(client.getItemQuantityForOrder(1,id),1);
-        assertEquals(client.getItemNameForOrder(2,id),"tomatoes");
-        assertEquals(client.getItemQuantityForOrder(2,id),1);
-        assertEquals(client.getItemNameForOrder(6,id),"pork");
-        assertEquals(client.getItemQuantityForOrder(6,id),1);
+        assertEquals(client.getItemNameForOrder(1, id), "cucumbers");
+        assertEquals(client.getItemQuantityForOrder(1, id), 1);
+        assertEquals(client.getItemNameForOrder(2, id), "tomatoes");
+        assertEquals(client.getItemQuantityForOrder(2, id), 1);
+        assertEquals(client.getItemNameForOrder(6, id), "pork");
+        assertEquals(client.getItemQuantityForOrder(6, id), 1);
 
-        assertEquals(client.getItemQuantityForOrder(9,id),0);
+        assertEquals(client.getItemQuantityForOrder(9, id), 0);
         assertNull(client.getItemNameForOrder(9, id));
 
     }
@@ -110,7 +113,7 @@ public class ShieldingIndividualClientImpTest {
         client.showFoodBoxes("pollotarian");
         //using knowledge from food_boxes.txt
         assertEquals(client.getItemQuantityForFoodBox(1, 2), 2);
-        assertEquals(client.getItemQuantityForFoodBox(3,3),1);
+        assertEquals(client.getItemQuantityForFoodBox(3, 3), 1);
 
         assertTrue(client.pickFoodBox(2));
         assertTrue(client.changeItemQuantityForPickedFoodBox(1, 1));
@@ -206,18 +209,18 @@ public class ShieldingIndividualClientImpTest {
 
         client.showFoodBoxes("pollotarian");
         //using knowledge from food_boxes.txt
-        assertEquals(client.getItemNameForFoodBox(1,2),"cucumbers");
+        assertEquals(client.getItemNameForFoodBox(1, 2), "cucumbers");
         assertEquals(client.getItemQuantityForFoodBox(1, 2), 2);
-        assertEquals(client.getItemNameForFoodBox(3,3),"onions");
-        assertEquals(client.getItemQuantityForFoodBox(3,3),1);
+        assertEquals(client.getItemNameForFoodBox(3, 3), "onions");
+        assertEquals(client.getItemQuantityForFoodBox(3, 3), 1);
 
-        assertEquals(client.getItemsNumberForFoodBox(1),4);
-        assertEquals(client.getItemsNumberForFoodBox(4),4);
-        assertEquals(client.getDietaryPreferenceForFoodBox(3),"none");
-        assertEquals(client.getDietaryPreferenceForFoodBox(5),"vegan");
-        assertEquals(client.getFoodBoxNumber(),5);
-        assertEquals(client.getItemIdsForFoodBox(2),Arrays.asList(1,3,7));
-        assertEquals(client.getItemIdsForFoodBox(3),Arrays.asList(3,4,8));
+        assertEquals(client.getItemsNumberForFoodBox(1), 4);
+        assertEquals(client.getItemsNumberForFoodBox(4), 4);
+        assertEquals(client.getDietaryPreferenceForFoodBox(3), "none");
+        assertEquals(client.getDietaryPreferenceForFoodBox(5), "vegan");
+        assertEquals(client.getFoodBoxNumber(), 5);
+        assertEquals(client.getItemIdsForFoodBox(2), Arrays.asList(1, 3, 7));
+        assertEquals(client.getItemIdsForFoodBox(3), Arrays.asList(3, 4, 8));
 
     }
 }
